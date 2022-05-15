@@ -55,11 +55,13 @@ public class Lease<T> {
     }
 
     /**
+     * 刷新租约
      * Renew the lease, use renewal duration if it was specified by the
      * associated {@link T} during registration, otherwise default duration is
      * {@link #DEFAULT_DURATION_IN_SECS}.
      */
     public void renew() {
+        // 是哦，实例最后更新的时间，不是应该就是当前时间吗？
         lastUpdateTimestamp = System.currentTimeMillis() + duration;
 
     }
@@ -98,6 +100,7 @@ public class Lease<T> {
     }
 
     /**
+     * 判断一个实例的租约是否过期
      * Checks if the lease of a given {@link com.netflix.appinfo.InstanceInfo} has expired or not.
      *
      * Note that due to renew() doing the 'wrong" thing and setting lastUpdateTimestamp to +duration more than
@@ -108,6 +111,24 @@ public class Lease<T> {
      * @param additionalLeaseMs any additional lease time to add to the lease evaluation in ms.
      */
     public boolean isExpired(long additionalLeaseMs) {
+        /**
+         *
+         * 心跳默认30秒执行一次，而定时任务默认90秒执行一次。所以正常情况下，在90秒内，有心跳执行才任务实例正常。
+         *
+         * 这个方法的意思就是：上次执行心跳后，间隔时间90秒内，都没有再次发送心跳。
+         * 但这里有个bug，它加了两个90秒，所以实际是180秒才会下线。
+         * 因为这里的lastUpdateTimestamp：等于上次心跳的时间+duration的90秒。
+         *
+         * 补偿时间：由于服务端自己的故障，导致没有及时检查实例的时间。
+         * 因为有可能服务延后执行了，恰好由于延后执行导致某个本不该剔除的实例被剔除）
+         * eg：
+         * lastUpdateTimestamp = System.currentTimeMillis() + duration;
+         *  10：01：30 =   10：00：00 +  90
+         *  当前时间 大于 最晚应该有心跳的时间： 10：03：00 = 10：01：30 + 90
+         *
+         *  另外，服务实例下线剔除之后客户端也不会马上感知，因为还存在实例缓存还有90秒。
+         *
+         */
         return (evictionTimestamp > 0 || System.currentTimeMillis() > (lastUpdateTimestamp + duration + additionalLeaseMs));
     }
 

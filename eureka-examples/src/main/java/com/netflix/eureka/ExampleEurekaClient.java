@@ -118,10 +118,27 @@ public class ExampleEurekaClient {
         ExampleEurekaClient sampleClient = new ExampleEurekaClient();
 
         // create the client
+        /**
+         * new MyDataCenterInstanceConfig(): => 读取eureka-client配置文件,构造InstanceConfig[服务实例配置]
+         * 再基于InstanceConfig,改造一个InstanceInfo[服务实例信息]
+         * 再基于InstanceInfo和InstanceConfig,构造ApplicationInfoManager[服务实例管理器]
+         *
+         * initializeEurekaClient:
+         * 基于服务实例管理器和eurekaClientConfig客户端配置,构造EurekaClient[DiscoveryClient]
+         *  在初始化DiscoveryClient时,初始化客户端相关操作:
+         *      注册服务
+         *      抓取注册表
+         *      ...
+         *
+         *
+         *
+         *
+         *
+         */
         ApplicationInfoManager applicationInfoManager = initializeApplicationInfoManager(new MyDataCenterInstanceConfig());
         EurekaClient client = initializeEurekaClient(applicationInfoManager, new DefaultEurekaClientConfig());
 
-        // use the client
+        // use the client: 使用eurekaClient
         sampleClient.sendRequestToServiceUsingEureka(client);
 
 

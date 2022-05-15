@@ -127,6 +127,7 @@ public final class EurekaHttpClients {
     }
 
     /**
+     * 基于DNS或者静态配置,解析出eurekaServer端节点
      * @return a bootstrap resolver that resolves eureka server endpoints based on either DNS or static config,
      *         depending on configuration for one or the other. This resolver will warm up at the start.
      */

@@ -141,6 +141,10 @@ public class ApplicationsResource {
             returnMediaType = MediaType.APPLICATION_XML;
         }
 
+        /**
+         * 缓存的key: 所有应用+数据格式为JSON+请求的版本?+region
+         * 因为应用列表是不区分调用方的,所以可以做缓存.
+         */
         Key cacheKey = new Key(Key.EntityType.Application,
                 ResponseCacheImpl.ALL_APPS,
                 keyType, CurrentRequestVersion.get(), EurekaAccept.fromString(eurekaAccept), regions

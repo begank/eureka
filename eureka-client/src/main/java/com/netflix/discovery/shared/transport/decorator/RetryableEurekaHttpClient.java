@@ -93,23 +93,38 @@ public class RetryableEurekaHttpClient extends EurekaHttpClientDecorator {
         }
     }
 
+    /**
+     * 执行可重试的请求,
+     * @param requestExecutor
+     * @param <R>
+     * @return
+     */
     @Override
     protected <R> EurekaHttpResponse<R> execute(RequestExecutor<R> requestExecutor) {
         List<EurekaEndpoint> candidateHosts = null;
         int endpointIdx = 0;
+        // 这里会进行重试(3次),每次重试会换一个新的节点
         for (int retry = 0; retry < numberOfRetries; retry++) {
             EurekaHttpClient currentHttpClient = delegate.get();
             EurekaEndpoint currentEndpoint = null;
             if (currentHttpClient == null) {
                 if (candidateHosts == null) {
+                    // getHostCandidates方法就是从上面的AsyncResolver中,获取到所有配置的节点,并组装成EurekaEndpoint
                     candidateHosts = getHostCandidates();
                     if (candidateHosts.isEmpty()) {
                         throw new TransportException("There is no known eureka server; cluster server list is empty");
                     }
                 }
+                // 如果获取到的server节点数为0,报错
                 if (endpointIdx >= candidateHosts.size()) {
                     throw new TransportException("Cannot execute request on any known server");
                 }
+
+                /**
+                 * 注意这里就是取server节点的逻辑,执行了endpointIdx+1:
+                 *  也就是说从server节点列表的第一个开始请求,
+                 *  如果失败会进行重试,重试时会通过endpointIdx++换下一个节点.
+                  */
 
                 currentEndpoint = candidateHosts.get(endpointIdx++);
                 currentHttpClient = clientFactory.newClient(currentEndpoint);

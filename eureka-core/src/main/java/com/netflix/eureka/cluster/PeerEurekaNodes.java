@@ -146,6 +146,8 @@ public class PeerEurekaNodes {
     }
 
     /**
+     * 更新eureka集群节点信息
+     *
      * Given new set of replica URLs, destroy {@link PeerEurekaNode}s no longer available, and
      * create new ones.
      *
@@ -157,6 +159,7 @@ public class PeerEurekaNodes {
             return;
         }
 
+        // 旧的节点信息，从旧的节点信息中移除新的节点信息，剩下的就是需要移除的
         Set<String> toShutdown = new HashSet<>(peerEurekaNodeUrls);
         toShutdown.removeAll(newPeerUrls);
         Set<String> toAdd = new HashSet<>(newPeerUrls);

@@ -43,6 +43,9 @@ import static org.mockito.Mockito.when;
  * which is essential to verifying content encoding/decoding with different format types (JSON vs XML, compressed vs
  * uncompressed).
  *
+ * 在这个测试中,将eureka注册中心启动,然后模拟eureka客户端发送请求到eureka注册中心,然后测试对应功能.
+ *
+ *
  * @author Tomasz Bak
  */
 public class EurekaClientServerRestIntegrationTest {
@@ -67,6 +70,10 @@ public class EurekaClientServerRestIntegrationTest {
 
     private static String eurekaServiceUrl;
 
+    /**
+     * 在测试执行之前
+     * @throws Exception
+     */
     @BeforeClass
     public static void setUp() throws Exception {
         injectEurekaConfiguration();
@@ -92,6 +99,10 @@ public class EurekaClientServerRestIntegrationTest {
         );
     }
 
+    /**
+     * 执行测试完成后
+     * @throws Exception
+     */
     @AfterClass
     public static void tearDown() throws Exception {
         removeEurekaConfiguration();
@@ -106,6 +117,10 @@ public class EurekaClientServerRestIntegrationTest {
         }
     }
 
+    /**
+     * 测试客户端注册
+     * @throws Exception
+     */
     @Test
     public void testRegistration() throws Exception {
         InstanceInfo instanceInfo = instanceInfoIt.next();
@@ -114,6 +129,10 @@ public class EurekaClientServerRestIntegrationTest {
         assertThat(httpResponse.getStatusCode(), is(equalTo(204)));
     }
 
+    /**
+     * 测试发送心跳
+     * @throws Exception
+     */
     @Test
     public void testHeartbeat() throws Exception {
         // Register first
@@ -127,6 +146,10 @@ public class EurekaClientServerRestIntegrationTest {
         assertThat(heartBeatResponse.getEntity(), is(nullValue()));
     }
 
+    /**
+     * 测试心跳发送不完全
+     * @throws Exception
+     */
     @Test
     public void testMissedHeartbeat() throws Exception {
         InstanceInfo instanceInfo = instanceInfoIt.next();
@@ -137,6 +160,10 @@ public class EurekaClientServerRestIntegrationTest {
         assertThat(heartBeatResponse.getStatusCode(), is(equalTo(404)));
     }
 
+    /**
+     * 测试服务被移除
+     * @throws Exception
+     */
     @Test
     public void testCancelForEntryThatExists() throws Exception {
         // Register first
@@ -149,6 +176,10 @@ public class EurekaClientServerRestIntegrationTest {
         assertThat(httpResponse.getStatusCode(), is(equalTo(200)));
     }
 
+    /**
+     * 测试服务不存在被删除
+     * @throws Exception
+     */
     @Test
     public void testCancelForEntryThatDoesNotExist() throws Exception {
         // Now cancel
@@ -179,6 +210,10 @@ public class EurekaClientServerRestIntegrationTest {
         assertThat(fetchedInstance.getStatus(), is(equalTo(InstanceStatus.UNKNOWN)));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void testBatch() throws Exception {
         InstanceInfo instanceInfo = instanceInfoIt.next();
@@ -232,7 +267,7 @@ public class EurekaClientServerRestIntegrationTest {
     }
 
     private static void startServer() throws Exception {
-        File warFile = findWar();
+/*        File warFile = findWar();
 
         server = new Server(8080);
 
@@ -241,6 +276,16 @@ public class EurekaClientServerRestIntegrationTest {
         webapp.setWar(warFile.getAbsolutePath());
         server.setHandler(webapp);
 
+        server.start();
+
+        eurekaServiceUrl = "http://localhost:8080/v2";*/
+        server = new Server(8080);
+
+        WebAppContext webAppCtx = new WebAppContext(new File("./eureka-server/src/main/webapp").getAbsolutePath(), "/");
+        webAppCtx.setDescriptor(new File("./eureka-server/src/main/webapp/WEB-INF/web.xml").getAbsolutePath());
+        webAppCtx.setResourceBase(new File("./eureka-server/src/main/resources").getAbsolutePath());
+        webAppCtx.setClassLoader(Thread.currentThread().getContextClassLoader());
+        server.setHandler(webAppCtx);
         server.start();
 
         eurekaServiceUrl = "http://localhost:8080/v2";
